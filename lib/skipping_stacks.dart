@@ -22,7 +22,13 @@ main() {
             VStacked(
               path: ':productName',
               name: 'productPage',
-              widget: ProductPage(),
+              widgetBuilder: (context) => ProductPage(
+                product: allProducts.firstWhere(
+                  (product) =>
+                      product.name ==
+                      VRouteElementData.of(context).pathParameters['productName'],
+                ),
+              ),
             ),
           ],
         ),
@@ -31,12 +37,24 @@ main() {
           //    - This is less verbose than creating multiple route
           //    - We can access the product type with the path parameter productType
           path: r'/:productType(book|shoes|pillow)',
-          widget: CategoryPage(),
+          widgetBuilder: (context) => CategoryPage(
+            products: allProducts
+                .where((product) =>
+                    productTypeToString(product.type) ==
+                    VRouteElementData.of(context).pathParameters['productType'])
+                .toList(),
+          ),
           subroutes: [
             VStacked(
               path: ':productName',
               name: 'productPage',
-              widget: ProductPage(),
+              widgetBuilder: (context) => ProductPage(
+                product: allProducts.firstWhere(
+                  (product) =>
+                      product.name ==
+                      VRouteElementData.of(context).pathParameters['productName'],
+                ),
+              ),
             ),
           ],
         ),
@@ -77,20 +95,13 @@ class SearchResultPage extends StatelessWidget {
   }
 }
 
-class ProductPage extends StatefulWidget {
-  @override
-  _ProductPageState createState() => _ProductPageState();
-}
+class ProductPage extends StatelessWidget {
+  final Product product;
 
-class _ProductPageState extends State<ProductPage> {
-  Product product;
+  const ProductPage({Key key, @required this.product}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    product ??= allProducts.firstWhere(
-      (product) => product.name == VRouteData.of(context).pathParameters['productName'],
-    );
-
     return Scaffold(
       appBar: AppBar(
         title: Center(child: Text('Dynamic linking')),
@@ -133,13 +144,10 @@ class _ProductPageState extends State<ProductPage> {
   }
 }
 
-class CategoryPage extends StatefulWidget {
-  @override
-  _CategoryPageState createState() => _CategoryPageState();
-}
+class CategoryPage extends StatelessWidget {
+  final List<Product> products;
 
-class _CategoryPageState extends State<CategoryPage> {
-  List<Product> products = [];
+  const CategoryPage({Key key, @required this.products}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -153,24 +161,10 @@ class _CategoryPageState extends State<CategoryPage> {
           )
         ],
       ),
-      body: VNavigationGuard(
-        afterEnter: (_, __, ___) => getProducts(),
-        afterUpdate: (_, __, ___) => getProducts(),
-        child: ProductList(
-          products: products,
-        ),
+      body: ProductList(
+        products: products,
       ),
     );
-  }
-
-  void getProducts() {
-    setState(() {
-      products = allProducts
-          .where((product) =>
-              productTypeToString(product.type) ==
-              VRouteData.of(context).pathParameters['productType'])
-          .toList();
-    });
   }
 }
 

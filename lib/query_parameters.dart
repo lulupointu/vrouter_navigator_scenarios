@@ -7,7 +7,9 @@ main() {
       routes: [
         VStacked(
           path: '/products',
-          widget: ProductsPage(),
+          widgetBuilder: (context) => ProductsPage(
+              sortAlphabetically:
+                  VRouteData.of(context).queryParameters['sortAlphabetically'] == 'true'),
         ),
         VRouteRedirector(path: ':_(.*)', redirectTo: '/products'),
       ],
@@ -15,60 +17,49 @@ main() {
   );
 }
 
-class ProductsPage extends StatefulWidget {
+class ProductsPage extends StatelessWidget {
   final itemCount = 200;
 
-  @override
-  _ProductsPageState createState() => _ProductsPageState();
-}
+  final bool sortAlphabetically;
 
-class _ProductsPageState extends State<ProductsPage> {
-  bool sortAlphabetically = true;
+  const ProductsPage({Key key, @required this.sortAlphabetically}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return VNavigationGuard(
-      // After we enter or update, we check sortAlphabetically queryParameter to see if the
-      // UI is synced with the url
-      afterEnter: (_, __, ___) => setState(() => sortAlphabetically =
-          VRouteData.of(context).queryParameters['sortAlphabetically'] == 'true'),
-      afterUpdate: (_, __, ___) => setState(() => sortAlphabetically =
-          VRouteData.of(context).queryParameters['sortAlphabetically'] == 'true'),
-      child: Scaffold(
-        appBar: AppBar(
-          title: Center(child: Text('Query Parameters')),
-        ),
-        body: Column(
-          children: [
-            TextButton(
-              onPressed: () => VRouterData.of(context).pushReplacement('/products',
-                  queryParameters: {'sortAlphabetically': (!sortAlphabetically).toString()}),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Click to sort'),
-                  Icon(sortAlphabetically ? Icons.arrow_downward : Icons.arrow_upward),
-                ],
-              ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Center(child: Text('Query Parameters')),
+      ),
+      body: Column(
+        children: [
+          TextButton(
+            onPressed: () => VRouterData.of(context).pushReplacement('/products',
+                queryParameters: {'sortAlphabetically': (!sortAlphabetically).toString()}),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Click to sort'),
+                Icon(sortAlphabetically ? Icons.arrow_downward : Icons.arrow_upward),
+              ],
             ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: widget.itemCount,
-                itemBuilder: (context, index) {
-                  return Container(
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      border: Border(top: BorderSide(color: Colors.black)),
-                    ),
-                    height: 50,
-                    child: Text(
-                        'Book number ${sortAlphabetically ? index : (widget.itemCount - index - 1)}'),
-                  );
-                },
-              ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: itemCount,
+              itemBuilder: (context, index) {
+                return Container(
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    border: Border(top: BorderSide(color: Colors.black)),
+                  ),
+                  height: 50,
+                  child: Text(
+                      'Book number ${sortAlphabetically ? index : (itemCount - index - 1)}'),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
